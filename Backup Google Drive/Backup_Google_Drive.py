@@ -30,6 +30,7 @@ def main():
                 request = service.files().list(q=query).execute()
             else:
                 request = service.files().list().execute()
+
         # Fetching data for Shared Drive
         else:
             shared_drive_datatype = ''
