@@ -20,13 +20,10 @@ def main():
 
         # Fetching data for Personal Drive
         if(source_drive_type == 'p'):
-            print('Do you wish to backup all the files in the specified Drive or just one specific folder?')
-            personal_drive_datatype = input('Enter \'A\' for all files or \'F\' for a specific folder: ')
-            print('\n')
-            personal_drive_datatype = personal_drive_datatype.lower()
-            ClosedQuestionLoop(personal_drive_datatype, 'a', 'f')
+            personal_drive_datatype = ''
+            FolderOrDriveLoop(personal_drive_datatype)
             if(personal_drive_datatype == 'f'):
-                folder_link = input('Please enter the link of the folder in your Personal Drive that you\'d like to backup: ')
+                folder_link = input('Please enter the link to the folder in your Personal Drive that you\'d like to backup: ')
                 folder_id = ''
                 GrabId(folder_link, folder_id)
                 query = f"parents = '{folder_id}'"
@@ -35,10 +32,19 @@ def main():
                 request = service.files().list().execute()
         # Fetching data for Shared Drive
         else:
-            drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to backup: '))
-            drive_id = ''
-            GrabId(drive_link, drive_id)
-            request = service.files().list(corpora='drive', driveId=drive_id, includeItemsFromAllDrives=True, supportsAllDrives=True).execute()
+            shared_drive_datatype = ''
+            FolderOrDriveLoop(shared_drive_datatype)
+            if(shared_drive_datatype == 'f'):
+                folder_link = input('Please enter the link of the folder in the selected Shared Drive that you\'d like to backup: ')
+                folder_id = ''
+                GrabId(folder_link, folder_id)
+                query = f"parents = '{folder_id}'"
+                request = service.files().list(q=query, supportsAllDrives=True).execute()
+            else:
+                drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to backup: '))
+                drive_id = ''
+                GrabId(drive_link, drive_id)
+                request = service.files().list(corpora='drive', driveId=drive_id, includeItemsFromAllDrives=True, supportsAllDrives=True).execute()
         files = request.get('files')
         nextPageToken = request.get('nextPageToken')
         while nextPageToken:
@@ -67,12 +73,14 @@ def GrabId(link, id):
         else:
             link = str(input('Invalid link. Please enter a link to the *ROOT* of a Shared Google Drive: '))
 
+# Loop until it's known wether the user wants to backup a specific folder or the entire specified Drive
 def FolderOrDriveLoop(var):
     print('Do you wish to backup all the files in the specified Drive or just one specific folder?')
     var = input('Enter \'A\' for all files or \'F\' for a specific folder: ')
     print('\n')
     var = var.lower()
     ClosedQuestionLoop(var, 'a', 'f')
+
     """
     service.files().copy(
         fileId=source_file_id,
