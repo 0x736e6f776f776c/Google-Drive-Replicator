@@ -1,5 +1,7 @@
 from Google import Create_Service
 import pandas as pn
+import tkinter as tk
+from tkinter import filedialog
 
 def main():
     CLIENT_SECRET_FILE = 'credentials.json'
@@ -7,13 +9,16 @@ def main():
     API_VERSION = 'v3'
     SCOPES = ['https://www.googleapis.com/auth/drive']
 
+    smart = False # New backup smart or not, default False
+    previous_smart = False # Is there a previous smart backup or not, default False
+
     # Create the Drive API Service
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION,SCOPES)
 
     # Beginning of the main loop
     while(True):
         # Query user to find out wether we're looking at a Personal/My or Shared Drive as source for the backup
-        print('Do you want to backup files from a Personal/My or Shared Drive?')
+        print('Do you want to backup files from a Personal/My Drive or a Shared Drive?')
         source_drive_type = str(input('Enter \'P\' for a Personal/My Drive or \'S\' for a Shared Drive: '))
         source_drive_type = source_drive_type.lower()
         source_drive_type = ClosedQuestionLoop(source_drive_type, 'p', 's')
@@ -45,13 +50,15 @@ def main():
                                                ).execute()
             else:
                 drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to backup: '))
-                drive_id = 'blyat'
+                drive_id = ''
                 drive_id = GrabId(drive_link, drive_id)
                 request = service.files().list(corpora='drive',
                                                driveId=drive_id,
                                                includeItemsFromAllDrives=True,
                                                supportsAllDrives=True
                                                ).execute()
+
+        # Get a DataFrame of all files and their metadata
         files = request.get('files')
         nextPageToken = request.get('nextPageToken')
         while nextPageToken:
@@ -60,6 +67,7 @@ def main():
             nextPageToken = request.get('nextPageToken')
         df = pn.DataFrame(files)
 
+        # Query amount of backup destinations to user
         try:
             destinations_amount = int(input('To how many destinations do you wish to backup your files? How many folder and/or Drives? '))
         except ValueError:
@@ -77,17 +85,96 @@ def main():
                 destination_id = GrabId(destination_link, destination_id)
             destination_parents_ids.append(destination_id)
 
-        source_file_ids = []
-        for index, rows in df.iterrows():
-            if rows.mimeType == 'application/vnd.google-apps.folder':
-                continue
-            file_id = rows.id
-            file_metadata = {'parents': destination_parents_ids}
-            service.files().copy(
-            fileId=file_id,
-            body=file_metadata,
-            supportsAllDrives=True
-            ).execute()
+        # Check with the user wether there's a previous smart backup they want the program to keep in mind
+        is_previous_smart_backup = str(input('Is there a pervious smart backup which you\'d like the program to keep in mind? Enter \'Y\'(es) or \'N\'(o): '))
+        is_previous_smart_backup = is_previous_smart_backup.lower()
+        ClosedQuestionLoop(is_previous_smart_backup, 'y', 'n')
+        if(is_previous_smart_backup == 'y'):
+            print('Please open the file of the previous smart backup:')
+            path_previous_smart = tk.filedialog.askopenfilename(filetypes=[('Text Files', '*.txt')],
+                                                                title='Select the previous smart backup file',
+                                                                initialdir='/',
+                                                                defaultextension='.txt'
+                                                                )
+            update_previous_smart = str(input('Do you wish to update the previous smart backup with the new backup up? Enter \'Y\'(es) or \'N\'(o): '))
+            update_previous_smart = update_previous_smart.lower()
+            ClosedQuestionLoop(update_previous_smart, 'y', 'n')
+            if(update_previous_smart == 'y'):
+                previous_smart_backup = open(path_previous_smart, 'r+') # Open previous smart backup read past backed up files and to append newly backed up files
+                smart = True
+            else:
+                previous_smart_backup = open(path_previous_smart) # Open previous smart backup to only read past backed up
+            previous_smart_content = previous_smart_backup.read()
+            previous_smart = True
+        else: # If there is no previous smart backup to keep in mind, check wether the user wants the current backup to be a smart one backup
+            is_smart_backup = str(input('Do you wish for the program to remember the files it has already backed up, so that they are skipped in future backups? Enter \'Y\'(es) or \'N\'(o): '))
+            is_smart_backup = is_smart_backup.lower()
+            ClosedQuestionLoop(is_smart_backup, 'y', 'n')
+            if(is_smart_backup == 'y'):
+                print('Please choose where to save the smart backup:')
+                path_smart_backup = tk.filedialog.asksaveasfilename(filetypes=[('Text Files', '*.txt')],
+                                                                    title='Choose where to save the smart backup',
+                                                                    initialdir='/',
+                                                                    defaultextension='.txt'
+                                                                    )
+                smart_backup = open(path_smart_backup, 'w') # Open new smart backup file to write the file id's to
+                smart = True
+
+        if(smart):
+            if(previous_smart):
+                for index, rows in df.iterrows():
+                    if(rows.mimeType == 'application/vnd.google-apps.folder'):
+                        continue
+                    file_id = rows.id
+                    if(file_id in previous_smart_content):
+                        continue
+                    file_metadata = {'parents': destination_parents_ids}
+                    service.files().copy(
+                    fileId=file_id,
+                    body=file_metadata,
+                    supportsAllDrives=True
+                    ).execute()
+                    previous_smart_backup.write(file_id + '\n')
+                previous_smart_backup.close()
+            else:
+                for index, rows in df.iterrows():
+                    if(rows.mimeType == 'application/vnd.google-apps.folder'):
+                        continue
+                    file_id = rows.id
+                    file_metadata = {'parents': destination_parents_ids}
+                    service.files().copy(
+                    fileId=file_id,
+                    body=file_metadata,
+                    supportsAllDrives=True
+                    ).execute()
+                    smart_backup.write(file_id + '\n')
+                smart_backup.close()
+        else:
+            if(previous_smart):
+                for index, rows in df.iterrows():
+                    if(rows.mimeType == 'application/vnd.google-apps.folder'):
+                        continue
+                    file_id = rows.id
+                    if(file_id in previous_smart_content):
+                        continue
+                    file_metadata = {'parents': destination_parents_ids}
+                    service.files().copy(
+                    fileId=file_id,
+                    body=file_metadata,
+                    supportsAllDrives=True
+                    ).execute()
+            else:
+                for index, rows in df.iterrows():
+                    if(rows.mimeType == 'application/vnd.google-apps.folder'):
+                        continue
+                    file_id = rows.id
+                    file_metadata = {'parents': destination_parents_ids}
+                    service.files().copy(
+                    fileId=file_id,
+                    body=file_metadata,
+                    supportsAllDrives=True
+                    ).execute()
+            
 
 # Loop until the user's input is valid
 def ClosedQuestionLoop(var, value_1, value_2):
@@ -122,4 +209,6 @@ def FolderOrDriveLoop(var):
     return var
 
 if __name__ == '__main__':
+    root = tk.Tk()
+    root.withdraw()
     main()
