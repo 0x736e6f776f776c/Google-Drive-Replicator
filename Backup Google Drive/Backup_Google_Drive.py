@@ -189,10 +189,11 @@ def ClosedQuestionLoop(var, value_1, value_2):
 # Grab the id from a Google Drive link
 def GrabId(link, id):
     while(True):
-        if('https://' in link):
-            id = link.strip(link[:43]) # Removing everything from the link except the drive id
+        if('https://' in link and 'drive.google.com/drive/u/' in link):
+            id = link[43:] # Grabbing the id from the link
+            print(id)
         elif('drive.google.com/drive/u/' in link):
-            id = link.strip(link[:35]) # Removing everything from the link except the drive id
+            id = link[35:] # Grabbing the id from the link if it's been copied without https://
         else:
             link = str(input('Invalid link. Please enter a link to the *ROOT* of a Shared Google Drive: '))
             continue
