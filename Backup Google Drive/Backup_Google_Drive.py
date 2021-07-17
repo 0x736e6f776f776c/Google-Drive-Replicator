@@ -11,6 +11,8 @@ def main():
 
     smart = False # New backup smart or not, default False
     previous_smart = False # Is there a previous smart backup or not, default False
+    trashed = False # Is the source file trashed or not, default False
+    starred = False # Is the source file starred or not, default False
 
     # Create the Drive API Service
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION,SCOPES)
@@ -96,6 +98,14 @@ def main():
                                                                 initialdir='/',
                                                                 defaultextension='.txt'
                                                                 )
+            if(path_previous_smart == None): # Try again if the user hasn't selected a file
+                tk.messagebox.showerror(title='No file found',
+                                        message='Please select a text(\'.txt\') file')
+                path_previous_smart = tk.filedialog.askopenfilename(filetypes=[('Text Files', '*.txt')],
+                                                                    title='Select the previous smart backup file',
+                                                                    initialdir='/',
+                                                                    defaultextension='.txt'
+                                                                    )
             update_previous_smart = str(input('Do you wish to update the previous smart backup with the new backup up? Enter \'Y\'(es) or \'N\'(o): '))
             update_previous_smart = update_previous_smart.lower()
             ClosedQuestionLoop(update_previous_smart, 'y', 'n')
@@ -119,7 +129,8 @@ def main():
                                                                     )
                 smart_backup = open(path_smart_backup, 'w') # Open new smart backup file to write the file id's to
                 smart = True
-
+        
+        # All variations of the copy algorithm
         if(smart):
             if(previous_smart):
                 for index, rows in df.iterrows():
@@ -128,7 +139,13 @@ def main():
                     file_id = rows.id
                     if(file_id in previous_smart_content):
                         continue
-                    file_metadata = {'parents': destination_parents_ids}
+                    if(rows.trashed == True):
+                        trashed = True
+                    if(rows.starred == True):
+                        starred = True
+                    file_metadata = {'parents': destination_parents_ids,
+                                     'starred': starred,
+                                     'trashed': trashed}
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -141,7 +158,13 @@ def main():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
                         continue
                     file_id = rows.id
-                    file_metadata = {'parents': destination_parents_ids}
+                    if(rows.trashed == True):
+                        trashed = True
+                    if(rows.starred == True):
+                        starred = True
+                    file_metadata = {'parents': destination_parents_ids,
+                                     'starred': starred,
+                                     'trashed': trashed}
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -157,7 +180,13 @@ def main():
                     file_id = rows.id
                     if(file_id in previous_smart_content):
                         continue
-                    file_metadata = {'parents': destination_parents_ids}
+                    if(rows.trashed == True):
+                        trashed = True
+                    if(rows.starred == True):
+                        starred = True
+                    file_metadata = {'parents': destination_parents_ids,
+                                     'starred': starred,
+                                     'trashed': trashed}
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -168,7 +197,13 @@ def main():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
                         continue
                     file_id = rows.id
-                    file_metadata = {'parents': destination_parents_ids}
+                    if(rows.trashed == True):
+                        trashed = True
+                    if(rows.starred == True):
+                        starred = True
+                    file_metadata = {'parents': destination_parents_ids,
+                                     'starred': starred,
+                                     'trashed': trashed}
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
