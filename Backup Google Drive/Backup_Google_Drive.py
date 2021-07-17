@@ -2,6 +2,8 @@ from Google import Create_Service
 import pandas as pn
 import tkinter as tk
 from tkinter import filedialog
+import random
+import string
 
 def main():
     CLIENT_SECRET_FILE = 'credentials.json'
@@ -145,25 +147,45 @@ def main():
             if(previous_smart):
                 for index, rows in df.iterrows():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
-                        continue
-                    source_filename = rows.name
-                    file_id = rows.id
-                    if(file_id in previous_smart_content):
-                        continue 
-                    if(rows.trashed == True):
-                        trashed = True
-                    if(rows.starred == True):
-                        starred = True
-                    file_metadata = {'name': source_filename,
-                                     'parents': destination_parents_ids,
-                                     'starred': starred,
-                                     'trashed': trashed}
-                    service.files().copy(
-                    fileId=file_id,
-                    body=file_metadata,
-                    supportsAllDrives=True
-                    ).execute()
-                    previous_smart_backup.write(file_id + '\n')
+                        source_folder_id = rows.id
+                        if(source_folder_id in previous_smart_content):
+                            continue
+                        source_folder_name = rows.name
+                        new_folder_id = rows.id
+                        if(new_folder_id[1:] != 'z'):
+                            new_folder_id[1:] = 'z'
+                        else:
+                            new_folder_id[1:] = 'x'
+                        first_folder_metadata = {'name': source_folder_name,
+                                                 'parents': destination_parents_ids,
+                                                 'id': new_folder_id,
+                                                 'mimeType': 'application/vnd.google-apps.folder'
+                                                 }
+                        service.files().create(body=first_folder_metadata)
+                        previous_smart_backup.write(source_folder_id + '\n')
+                        for index, rows in df.iterrows():
+                            if rows.parents != None:
+                                if(source_folder_id in rows.parents):
+
+                                    source_filename = rows.name
+                                    file_id = rows.id
+                                    if(file_id in previous_smart_content):
+                                        continue 
+                                    if(rows.trashed == True):
+                                        trashed = True
+                                    if(rows.starred == True):
+                                        starred = True
+                                    file_metadata = {'name': source_filename,
+                                                     'parents': destination_parents_ids,
+                                                     'starred': starred,
+                                                     'trashed': trashed
+                                                     }
+                                    service.files().copy(
+                                    fileId=file_id,
+                                    body=file_metadata,
+                                    supportsAllDrives=True
+                                    ).execute()
+                                    previous_smart_backup.write(file_id + '\n')
                 previous_smart_backup.close()
             else:
                 for index, rows in df.iterrows():
@@ -178,7 +200,8 @@ def main():
                     file_metadata = {'name': source_filename,
                                      'parents': destination_parents_ids,
                                      'starred': starred,
-                                     'trashed': trashed}
+                                     'trashed': trashed
+                                     }
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -202,7 +225,8 @@ def main():
                     file_metadata = {'name': source_filename,
                                      'parents': destination_parents_ids,
                                      'starred': starred,
-                                     'trashed': trashed}
+                                     'trashed': trashed
+                                     }
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -221,7 +245,8 @@ def main():
                     file_metadata = {'name': source_filename,
                                      'parents': destination_parents_ids,
                                      'starred': starred,
-                                     'trashed': trashed}
+                                     'trashed': trashed
+                                     }
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -244,7 +269,6 @@ def GrabId(link, id):
     while(True):
         if('https://' in link and 'drive.google.com/drive/u/' in link):
             id = link[43:] # Grabbing the id from the link
-            print(id)
         elif('drive.google.com/drive/u/' in link):
             id = link[35:] # Grabbing the id from the link if it's been copied without https://
         else:
@@ -261,6 +285,9 @@ def FolderOrDriveLoop(var):
     var = var.lower()
     var = ClosedQuestionLoop(var, 'a', 'f')
     return var
+
+def RandomId(output_id):
+    output_id = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(33))
 
 if __name__ == '__main__':
     root = tk.Tk()
