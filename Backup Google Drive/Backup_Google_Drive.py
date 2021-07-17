@@ -100,7 +100,8 @@ def main():
                                                                 )
             if(path_previous_smart == None): # Try again if the user hasn't selected a file
                 tk.messagebox.showerror(title='No file found',
-                                        message='Please select a text(\'.txt\') file')
+                                        message='Please select a text(\'.txt\') file'
+                                        )
                 path_previous_smart = tk.filedialog.askopenfilename(filetypes=[('Text Files', '*.txt')],
                                                                     title='Select the previous smart backup file',
                                                                     initialdir='/',
@@ -127,6 +128,15 @@ def main():
                                                                     initialdir='/',
                                                                     defaultextension='.txt'
                                                                     )
+                if(path_smart_backup == None): # Try again if the user hasn't selected a file
+                    tk.messagebox.showerror(title='No file found',
+                                            message='Please save the backup as a text(\'.txt\') file'
+                                            )
+                    path_smart_backup = tk.filedialog.asksaveasfilename(filetypes=[('Text Files', '*.txt')],
+                                                                        title='Choose where to save the smart backup',
+                                                                        initialdir='/',
+                                                                        defaultextension='.txt'
+                                                                        )
                 smart_backup = open(path_smart_backup, 'w') # Open new smart backup file to write the file id's to
                 smart = True
         
