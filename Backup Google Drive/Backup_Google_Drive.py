@@ -146,14 +146,16 @@ def main():
                 for index, rows in df.iterrows():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
                         continue
+                    source_filename = rows.name
                     file_id = rows.id
                     if(file_id in previous_smart_content):
-                        continue
+                        continue 
                     if(rows.trashed == True):
                         trashed = True
                     if(rows.starred == True):
                         starred = True
-                    file_metadata = {'parents': destination_parents_ids,
+                    file_metadata = {'name': source_filename,
+                                     'parents': destination_parents_ids,
                                      'starred': starred,
                                      'trashed': trashed}
                     service.files().copy(
@@ -167,12 +169,14 @@ def main():
                 for index, rows in df.iterrows():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
                         continue
+                    source_filename = rows.name
                     file_id = rows.id
                     if(rows.trashed == True):
                         trashed = True
                     if(rows.starred == True):
                         starred = True
-                    file_metadata = {'parents': destination_parents_ids,
+                    file_metadata = {'name': source_filename,
+                                     'parents': destination_parents_ids,
                                      'starred': starred,
                                      'trashed': trashed}
                     service.files().copy(
@@ -187,6 +191,7 @@ def main():
                 for index, rows in df.iterrows():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
                         continue
+                    source_filename = rows.name
                     file_id = rows.id
                     if(file_id in previous_smart_content):
                         continue
@@ -194,7 +199,8 @@ def main():
                         trashed = True
                     if(rows.starred == True):
                         starred = True
-                    file_metadata = {'parents': destination_parents_ids,
+                    file_metadata = {'name': source_filename,
+                                     'parents': destination_parents_ids,
                                      'starred': starred,
                                      'trashed': trashed}
                     service.files().copy(
@@ -206,12 +212,14 @@ def main():
                 for index, rows in df.iterrows():
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
                         continue
+                    source_filename = rows.name
                     file_id = rows.id
                     if(rows.trashed == True):
                         trashed = True
                     if(rows.starred == True):
                         starred = True
-                    file_metadata = {'parents': destination_parents_ids,
+                    file_metadata = {'name': source_filename,
+                                     'parents': destination_parents_ids,
                                      'starred': starred,
                                      'trashed': trashed}
                     service.files().copy(
