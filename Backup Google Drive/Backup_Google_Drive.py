@@ -168,22 +168,7 @@ def main():
                                                     supportsAllDrives=True,
                                                     fields='id'
                                                     ).execute()
-                query = f"parents = '{source_folder_id}'"
-                folder_request = service.files().list(q=query, 
-                                                      orderBy='folder, name',
-                                                      supportsAllDrives=True
-                                                      ).execute()
-                folder_files = folder_request.get('files')
-                nextPageToken = folder_request.get('nextPageToken')
-                while nextPageToken:
-                    folder_request = service.files().list(q=query,
-                                                          orderBy='folder, name',
-                                                          pageToken=nextPageToken,
-                                                          supportsAllDrives=True
-                                                          ).execute()
-                    folder_files.extend(request.get('files', parentId=source_folder_id))
-                    nextPageToken = folder_request.get('nextPageToken')
-                df_folder = pn.DataFrame(folder_files)
+                new_folder_id = new_folder.get('id')
                 if(previous_smart == True and smart == True):
                     previous_smart_backup.write(source_folder_id + '\n')
                 completed.extend(source_folder_id)
@@ -193,25 +178,24 @@ def main():
                                                     supportsAllDrives=True
                                                     ).execute()
                     file_parents = file.get('parents')
-                    if(source_folder_id not in 'parents'):
+                    if(source_folder_id not in file_parents):
                         continue
                     new_file = service.files().get(fileId=rows.id,
                                                     fields='name, id',
                                                     supportsAllDrives=True
                                                     ).execute()
-                    new_file_name = source_folder.get('name')
+                    new_file_name = new_file.get('name')
                     if(rows.mimeType == 'application/vnd.google-apps.folder'):
-                        CreateReplicaFolder(source_folder_id, new_file_name)
+                        CreateReplicaFolder(new_folder_id, new_file_name, service)
                         continue
                     if(rows.id in completed):
                         continue
-                    source_filename = rows.name
                     file_id = rows.id
                     if(previous_smart == True):
                         if(file_id in previous_smart_content):
                             continue
-                    folder_parent_id = [new_folder.get('id')]
-                    file_metadata = {'name': source_filename, 'parents': folder_parent_id}
+                    folder_parent_id = [new_folder_id]
+                    file_metadata = {'name': new_file_name, 'parents': folder_parent_id}
                     service.files().copy(
                     fileId=file_id,
                     body=file_metadata,
@@ -223,14 +207,16 @@ def main():
                     elif(smart == True):
                         smart_backup.write(file_id + '\n')
                 continue
-            else:
-                continue
             file_id = rows.id
-            source_filename = rows.name
             if(previous_smart == True):
                 if(file_id in previous_smart_content):
                     continue
-            file_metadata = {'name': source_filename, 'parents': destination_parents_ids}
+            new_file = service.files().get(fileId=rows.id,
+                                                  fields='name, id',
+                                                  supportsAllDrives=True
+                                                  ).execute()
+            new_file_name = new_file.get('name')
+            file_metadata = {'name': new_file_name, 'parents': destination_parents_ids}
             service.files().copy(
             fileId=file_id,
             body=file_metadata,
@@ -285,12 +271,15 @@ def FolderOrDriveLoop(var):
     var = ClosedQuestionLoop(var, 'a', 'f')
     return var
 
-def CreateReplicaFolder(destination_id, name):
+def CreateReplicaFolder(parents_ids, name, service):
     folder_metadata = {'name': name,
-                       'parents': destination_id,
+                       'parents': parents_ids,
                        'mimeType': 'application/vnd.google-apps.folder'
                        }
-    service.files().create(body=folder_metadata)
+    new_folder = service.files().create(body=folder_metadata,
+                                        supportsAllDrives=True,
+                                        fields='id'
+                                        ).execute()
 
 if __name__ == '__main__':
     root = tk.Tk()
