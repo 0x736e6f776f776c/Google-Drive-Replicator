@@ -300,16 +300,6 @@ def FolderOrDriveLoop(var):
     var = ClosedQuestionLoop(var, 'a', 'f')
     return var
 
-def CreateReplicaFolder(parents_ids, name, service):
-    folder_metadata = {'name': name,
-                       'parents': parents_ids,
-                       'mimeType': 'application/vnd.google-apps.folder'
-                       }
-    new_folder = service.files().create(body=folder_metadata,
-                                        supportsAllDrives=True,
-                                        fields='id'
-                                        ).execute()
-
 def CopyWithFolders(df, destinations, service, previous_smart, smart, source_folder_id, previous_smart_content, completed, previous_smart_backup, smart_backup, parents, source_folder_name):
     for destination in destinations:
         parents[0] = destination
