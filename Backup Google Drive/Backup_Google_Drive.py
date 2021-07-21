@@ -15,9 +15,18 @@ def main():
     previous_smart = False # Is there a previous smart backup or not, default False
     trashed = False # Is the source file trashed or not, default False
     starred = False # Is the source file starred or not, default False
-    completed = [] # The id's of completed files while backing up
-    folder_id = '' # The id of the source folder
-    parents = [''] # The desired parents of copied files
+    completed = [] # The id's of completed files while backing up (placeholder)
+    folder_id = '' # The id of the source folder (placeholder)
+    drive_id = '' # The id of the Drive (placeholder)
+    destination_id = '' # The id of a destination (placeholder)
+    parents = [''] # The desired parents of copied files (placeholder)
+    query = '' # Placeholder for the search query used to list files
+    shared_drive_datatype = '' # Placeholder for shared Drive datatype
+    personal_drive_datatype = '' # Placeholder for My Drive datatype
+    previous_smart_content = None # Placeholder
+    smart_backup = None # Placeholder
+    previous_smart_backup = None # Placeholder
+    smart_backup = None # Placeholder
 
     # Create the Drive API Service
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION,SCOPES)
@@ -32,7 +41,6 @@ def main():
 
         # Fetching data for Personal Drive
         if(source_drive_type == 'p'):
-            personal_drive_datatype = ''
             personal_drive_datatype = FolderOrDriveLoop(personal_drive_datatype)
             if(personal_drive_datatype == 'f'):
                 folder_link = input('Please enter the link to the folder in your Personal/My Drive that you\'d like to backup: ')
@@ -44,7 +52,6 @@ def main():
 
         # Fetching data for Shared Drive
         else:
-            shared_drive_datatype = ''
             shared_drive_datatype = FolderOrDriveLoop(shared_drive_datatype)
             if(shared_drive_datatype == 'f'):
                 folder_link = input('Please enter the link of the folder in the selected Shared Drive that you\'d like to backup: ')
@@ -56,7 +63,6 @@ def main():
                                                ).execute()
             else:
                 drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to backup: '))
-                drive_id = ''
                 drive_id = GrabId(drive_link, drive_id)
                 request = service.files().list(corpora='drive',
                                                driveId=drive_id,
@@ -69,7 +75,7 @@ def main():
         files = request.get('files')
         nextPageToken = request.get('nextPageToken')
         while nextPageToken:
-            request = service.files().list(q=query, 
+            request = service.files().list(q=query,
                                            orderBy='folder, name',
                                            pageToken=nextPageToken
                                            ).execute()
@@ -90,7 +96,6 @@ def main():
             destination_link = input('Please enter the link of destination ' + str(i) + 
                                      ' (If you wish to backup to a Personal/My Drive, create a folder in there and enter the link to it here"): '
                                      )
-            destination_id = ''
             if(destination_link.lower()!= 'm'):
                 destination_id = GrabId(destination_link, destination_id)
             destination_parents_ids.append(destination_id)
@@ -159,9 +164,7 @@ def main():
                                                     supportsAllDrives=True
                                                     ).execute()
                 source_folder_name = source_folder.get('name')
-                CopyWithFolders(df, destination_parents_ids, service)
                 for destination in destination_parents_ids:
-                    print(destination)
                     parents[0] = destination
                     folder_metadata = {'name': source_folder_name,
                                        'parents': parents,
@@ -174,6 +177,8 @@ def main():
                     new_folder_id = new_folder.get('id')
                     if(previous_smart == True and smart == True):
                         previous_smart_backup.write(source_folder_id + '\n')
+                    elif(smart == True):
+                        smart_backup.write(source_folder_id + '\n')
                     completed.append(source_folder_id)
                     for index, rows in df.iterrows():
                         file = service.files().get(fileId=rows.id,
@@ -183,20 +188,21 @@ def main():
                         file_parents = file.get('parents')
                         if(source_folder_id not in file_parents):
                             continue
-                        new_file = service.files().get(fileId=rows.id,
+                        old_file = service.files().get(fileId=rows.id,
                                                         fields='name, id, starred, trashed',
                                                         supportsAllDrives=True
                                                         ).execute()
-                        new_file_name = new_file.get('name')
-                        trashed = new_file.get('trashed')
-                        starred = new_file.get('starred')
+                        new_file_name = old_file.get('name')
+                        trashed = old_file.get('trashed')
+                        starred = old_file.get('starred')
+                        if(rows.id in completed):
+                            continue
+                        if(previous_smart == True):
+                            if(rows.id in previous_smart_content):
+                                continue
                         if(rows.mimeType == 'application/vnd.google-apps.folder'):
                             folder_parents = [new_folder_id]
-                            next_folder_id = ['']
-                            CreateReplicaFolder(folder_parents, new_file_name, service, next_folder)
-                            completed.append(rows.id)
-                            continue
-                        if(rows.id in completed):
+                            CopyWithFolders(df, folder_parents, service, previous_smart, smart, rows.id, previous_smart_content, completed, previous_smart_backup, smart_backup, parents, new_file_name)
                             continue
                         file_id = rows.id
                         if(previous_smart == True):
@@ -217,38 +223,39 @@ def main():
                             previous_smart_backup.write(file_id + '\n')
                         elif(smart == True):
                             smart_backup.write(file_id + '\n')
-                    continue
+                        continue
             file_id = rows.id
             if(previous_smart == True):
                 if(file_id in previous_smart_content):
                     continue
             for destination in destination_parents_ids:
-                print(destination)
                 parents[0] = destination
-                new_file = service.files().get(fileId=rows.id,
-                                               fields='name, id, starred, trashed',
+                old_file = service.files().get(fileId=rows.id,
+                                               fields='name, id, starred, trashed, parents',
                                                supportsAllDrives=True
                                                ).execute()
-                new_file_name = new_file.get('name')
-                trashed = new_file.get('trashed')
-                starred = new_file.get('starred')
+                old_file_parents = old_file.get('parents')
+                if(len(old_file_parents[0]) > 5 and old_file_parents[0] != drive_id and old_file_parents[0] != folder_id):
+                    break
+                new_file_name = old_file.get('name')
+                trashed = old_file.get('trashed')
+                starred = old_file.get('starred')
                 if(trashed == True):
-                    pass
+                    continue
                 file_metadata = {'name': new_file_name,
                                  'parents': parents,
-                                 'starred': starred
+                                 'starred': starred,
                                  }
-                service.files().copy(
-                fileId=file_id,
-                body=file_metadata,
-                supportsAllDrives=True
-                ).execute()
+                new_file = service.files().copy(
+                                                fileId=file_id,
+                                                body=file_metadata,
+                                                supportsAllDrives=True
+                                                ).execute()
                 if(previous_smart == True and smart == True):
                     previous_smart_backup.write(file_id + '\n')
                 elif(smart == True):
                     smart_backup.write(file_id + '\n')
-                completed.extend(file_id)
-                continue
+                completed.append(file_id)
         if(previous_smart == True):
             previous_smart_backup.close()
         if(smart == True and previous_smart != True):
@@ -303,9 +310,8 @@ def CreateReplicaFolder(parents_ids, name, service):
                                         fields='id'
                                         ).execute()
 
-def CopyWithFolders(df, destinations, service, previous_smart, smart, source_folder_id, previous_smart_content, completed, previous_smart_backup, smart_backup):
+def CopyWithFolders(df, destinations, service, previous_smart, smart, source_folder_id, previous_smart_content, completed, previous_smart_backup, smart_backup, parents, source_folder_name):
     for destination in destinations:
-        print(destination)
         parents[0] = destination
         folder_metadata = {'name': source_folder_name,
                             'parents': parents,
@@ -318,6 +324,8 @@ def CopyWithFolders(df, destinations, service, previous_smart, smart, source_fol
         new_folder_id = new_folder.get('id')
         if(previous_smart == True and smart == True):
             previous_smart_backup.write(source_folder_id + '\n')
+        elif(smart == True):
+            smart_backup.write(source_folder_id + '\n')
         completed.append(source_folder_id)
         for index, rows in df.iterrows():
             file = service.files().get(fileId=rows.id,
@@ -327,26 +335,24 @@ def CopyWithFolders(df, destinations, service, previous_smart, smart, source_fol
             file_parents = file.get('parents')
             if(source_folder_id not in file_parents):
                 continue
-            new_file = service.files().get(fileId=rows.id,
+            old_file = service.files().get(fileId=rows.id,
                                             fields='name, id, starred, trashed',
                                             supportsAllDrives=True
                                             ).execute()
-            new_file_name = new_file.get('name')
-            trashed = new_file.get('trashed')
-            starred = new_file.get('starred')
-            if(rows.mimeType == 'application/vnd.google-apps.folder'):
-                folder_parents = [new_folder_id]
-                next_folder_id = ['']
-                CopyWithFolders(df, new_folder_id, previous_smart, smart, rows.id)
-                CreateReplicaFolder(folder_parents, new_file_name, service, next_folder)
-                completed.append(rows.id)
-                continue
+            new_file_name = old_file.get('name')
+            trashed = old_file.get('trashed')
+            starred = old_file.get('starred')
             if(rows.id in completed):
                 continue
-            file_id = rows.id
             if(previous_smart == True):
-                if(file_id in previous_smart_content):
+                if(rows.id in previous_smart_content):
                     continue
+            if(rows.mimeType == 'application/vnd.google-apps.folder'):
+                folder_parents = [new_folder_id]
+                CopyWithFolders(df, folder_parents, service, previous_smart, smart, rows.id, previous_smart_content, completed, previous_smart_backup, smart_backup, parents, new_file_name)
+                completed.append(rows.id)
+                continue
+            file_id = rows.id
             folder_parent_id = [new_folder_id]
             file_metadata = {'name': new_file_name,
                                 'parents': folder_parent_id,
@@ -362,9 +368,6 @@ def CopyWithFolders(df, destinations, service, previous_smart, smart, source_fol
                 previous_smart_backup.write(file_id + '\n')
             elif(smart == True):
                 smart_backup.write(file_id + '\n')
-        return completed
-        return smart_backup
-        return previous_smart_backup
 
 if __name__ == '__main__':
     root = tk.Tk()
