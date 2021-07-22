@@ -197,7 +197,10 @@ def main():
                         new_file_name = old_file.get('name')
                         trashed = old_file.get('trashed')
                         starred = old_file.get('starred')
-                        if(rows.id in completed):
+                        old_file_id = old_file.get('id')
+                        if(old_file_id in completed):
+                            continue
+                        if(trashed == True):
                             continue
                         if(previous_smart == True):
                             if(rows.id in previous_smart_content):
@@ -338,6 +341,8 @@ def CopyWithFolders(df, destinations, service, previous_smart, smart, source_fol
             starred = old_file.get('starred')
             if(rows.id in completed):
                 continue
+            if(trashed == True):
+                    continue
             if(previous_smart == True):
                 if(rows.id in previous_smart_content):
                     continue
