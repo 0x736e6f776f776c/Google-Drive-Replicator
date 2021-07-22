@@ -159,6 +159,8 @@ def main():
                 continue
             if(rows.mimeType == 'application/vnd.google-apps.folder'):
                 source_folder_id = rows.id
+                if(source_folder_id in completed):
+                    continue
                 source_folder = service.files().get(fileId=source_folder_id,
                                                     fields='name',
                                                     supportsAllDrives=True
@@ -225,6 +227,8 @@ def main():
                             smart_backup.write(file_id + '\n')
                         continue
             file_id = rows.id
+            if(file_id in completed):
+                continue
             if(previous_smart == True):
                 if(file_id in previous_smart_content):
                     continue
