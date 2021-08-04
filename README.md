@@ -8,15 +8,15 @@ First of all, go to the [release](https://github.com/techsnowowl/Google-Drive-Re
 ***If you downloaded *setup.exe*:***
 
 1. Run the executable and choose where you wish to save the program files.
-3. Open the installed folder, the name should be *Google Drive Replicator*.
-4. Now that you're in the folder, you should see two Python (.py) files, a text (.txt) file, a batch (.bat) file, and a JSON (.json) file. Double-click the batch file (*Dependancy Installer.bat*) to install the Python dependencies for the program.
-5. After the installer is done, hit any key to close it. The text file and the batch file should now be gone.
+2. Open the installed folder, the name should be *Google Drive Replicator*.
+3. Now that you're in the folder, you should see two Python (.py) files, a text (.txt) file, a batch (.bat) file, and a JSON (.json) file. Double-click the batch file (*Dependancy Installer.bat*) to install the Python dependencies for the program.
+4. After the installer is done, hit any key to close it. The text file and the batch file should now be gone.
 5. Double click the *Google_Drive_Replicator.py* file to run the program.
 6. Follow the instructions inside the program to make replicas of you Google Drive files.
 
 ***If you cloned the repository:***
 1. Go to the *Google Drive Replicator* folder.
-3. Now that you're in the folder, you should see two Python (.py) files, a text (.txt) file, and a JSON (.json) file. You now need to install the Python dependencies for the program. There are two ways to do this:  
+2. Now that you're in the folder, you should see two Python (.py) files, a text (.txt) file, and a JSON (.json) file. You now need to install the Python dependencies for the program. There are two ways to do this:  
    Either using a script;
     * Go to my [Python Dependency Installer](https://github.com/techsnowowl/Scripts/tree/main/Python%20Dependency%20Installer) page.  
     * Click one of the download links in the README according to the version you want and save the batch (.bat) file when prompted to do so.  
@@ -28,7 +28,7 @@ First of all, go to the [release](https://github.com/techsnowowl/Google-Drive-Re
    * Open the a command line interface (Eg CMD)
    * ```cd``` into the program's folder
    * Run the command ```pip install -r requirements.txt```. The dependencies will now be installed, you can close the command line when it's done.
-6. Double click the *Google_Drive_Replicator.py* file to run the program.
-7. Follow the instructions inside the program to make replicas of you Google Drive files.
+3. Double click the *Google_Drive_Replicator.py* file to run the program.
+4. Follow the instructions inside the program to make replicas of you Google Drive files.
 
 If you experience any issues with the program, please let me know, and I'll try to help you out.
