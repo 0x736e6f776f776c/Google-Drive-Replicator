@@ -2,10 +2,10 @@ from Google import Create_Service
 import pandas as pn
 import tkinter as tk
 from tkinter import filedialog
-import random
-import string
 
 def main():
+    Banner() # Display the program's banner
+
     CLIENT_SECRET_FILE = 'credentials.json'
     API_NAME = 'drive'
     API_VERSION = 'v3'
@@ -27,6 +27,8 @@ def main():
     smart_backup = None # Placeholder
     previous_smart_backup = None # Placeholder
     smart_backup = None # Placeholder
+
+        
 
     # Create the Drive API Service
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION,SCOPES)
@@ -367,6 +369,27 @@ def CopyWithFolders(df, destinations, service, previous_smart, smart, source_fol
                 previous_smart_backup.write(file_id + '\n')
             elif(smart == True):
                 smart_backup.write(file_id + '\n')
+
+def Banner():
+    banner_text = '''
+                                                         
+ _____                 _         ____        _           
+|   __| ___  ___  ___ | | ___   |    \  ___ |_| _ _  ___ 
+|  |  || . || . || . || || -_|  |  |  ||  _|| || | || -_|
+|_____||___||___||_  ||_||___|  |____/ |_|  |_| \_/ |___|
+                 |___|                                   
+                                                         
+ _____            _  _            _                      
+| __  | ___  ___ | ||_| ___  ___ | |_  ___  ___          
+|    -|| -_|| . || || ||  _|| .'||  _|| . ||  _|         
+|__|__||___||  _||_||_||___||__,||_|  |___||_|           
+            |_|                                          
+
+Google Drive Replicator V1.0
+Coded by TechSnowOwl
+https://github.com/techsnowowl/Google-Drive-Replicator
+    '''
+    print(banner_text)
 
 if __name__ == '__main__':
     root = tk.Tk()
