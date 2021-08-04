@@ -1,4 +1,4 @@
-# Backup for Google Drive
+# Google Drive Replicator by TechSnowOwl
 A tool to replicate your Google Drive files in a fast and simple matter
 ## What does this tool do?
 After running the script and authenticating with your Google account, you can copy all the files in a given Google Drive or a specified folder to any other place in Google Drive. You have the option to copy the files to multiple destinations. You can also select a smart backup option, so that the files you've already backed up will be left out the next time you back up a Drive or folder. This tool works for Personal/My Drives and for Shared Drives.
