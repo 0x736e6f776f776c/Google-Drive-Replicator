@@ -34,7 +34,7 @@ def main():
     # Beginning of the main loop
     while(True):
         # Query user to find out whether we're looking at a Personal/My or Shared Drive as source for the backup
-        print('Do you want to backup files from a Personal/My Drive or a Shared Drive?')
+        print('Do you want to replicate files from a Personal/My Drive or a Shared Drive?')
         source_drive_type = str(input('Enter \'P\' for a Personal/My Drive or \'S\' for a Shared Drive: '))
         source_drive_type = source_drive_type.lower()
         source_drive_type = ClosedQuestionLoop(source_drive_type, 'p', 's')
@@ -43,7 +43,7 @@ def main():
         if(source_drive_type == 'p'):
             personal_drive_datatype = FolderOrDriveLoop(personal_drive_datatype)
             if(personal_drive_datatype == 'f'):
-                folder_link = input('Please enter the link to the folder in your Personal/My Drive that you\'d like to backup: ')
+                folder_link = input('Please enter the link to the folder in your Personal/My Drive that you\'d like to replicate: ')
                 folder_id = GrabId(folder_link, folder_id)
                 query = f"parents = '{folder_id}'"
                 request = service.files().list(q=query, orderBy='folder, name').execute()
@@ -54,7 +54,7 @@ def main():
         else:
             shared_drive_datatype = FolderOrDriveLoop(shared_drive_datatype)
             if(shared_drive_datatype == 'f'):
-                folder_link = input('Please enter the link of the folder in the selected Shared Drive that you\'d like to backup: ')
+                folder_link = input('Please enter the link of the folder in the selected Shared Drive that you\'d like to replicate: ')
                 folder_id = GrabId(folder_link, folder_id)
                 query = f"parents = '{folder_id}'"
                 request = service.files().list(q=query,
@@ -62,7 +62,7 @@ def main():
                                                supportsAllDrives=True
                                                ).execute()
             else:
-                drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to backup: '))
+                drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to replicate: '))
                 drive_id = GrabId(drive_link, drive_id)
                 request = service.files().list(corpora='drive',
                                                driveId=drive_id,
@@ -85,7 +85,7 @@ def main():
 
         # Query amount of backup destinations to user
         try:
-            destinations_amount = int(input('To how many destinations do you wish to backup your files? How many folder and/or Drives? '))
+            destinations_amount = int(input('To how many destinations do you wish to replicate your files? How many folder and/or Drives? '))
         except ValueError:
             destinations_amount = int(input('Error: please enter an integer/a non-decimal number: '))
 
@@ -94,7 +94,7 @@ def main():
         while i != destinations_amount:
             i += 1
             destination_link = input('Please enter the link of destination ' + str(i) + 
-                                     ' (If you wish to backup to a Personal/My Drive, create a folder in there and enter the link to it here"): '
+                                     ' (If you wish to replicate to a Personal/My Drive, create a folder in there and enter the link to it here"): '
                                      )
             if(destination_link.lower()!= 'm'):
                 destination_id = GrabId(destination_link, destination_id)
@@ -131,7 +131,7 @@ def main():
             previous_smart_content = previous_smart_backup.read()
             previous_smart = True
         else: # If there is no previous smart backup to keep in mind, check whether the user wants the current backup to be a smart one backup
-            is_smart_backup = str(input('Do you wish for the program to remember the files it has already backed up, so that they are skipped in future backups? Enter \'Y\'(es) or \'N\'(o): '))
+            is_smart_backup = str(input('Do you wish for the program to remember the files it has already replicated, so that they are skipped in future replications? Enter \'Y\'(es) or \'N\'(o): '))
             is_smart_backup = is_smart_backup.lower()
             ClosedQuestionLoop(is_smart_backup, 'y', 'n')
             if(is_smart_backup == 'y'):
@@ -143,7 +143,7 @@ def main():
                                                                     )
                 if(path_smart_backup == None): # Try again if the user hasn't selected a file
                     tk.messagebox.showerror(title='No file found',
-                                            message='Please save the backup as a text(\'.txt\') file'
+                                            message='Please save the smart backup as a text(\'.txt\') file'
                                             )
                     path_smart_backup = tk.filedialog.asksaveasfilename(filetypes=[('Text Files', '*.txt')],
                                                                         title='Choose where to save the smart backup',
@@ -268,7 +268,7 @@ def main():
         if(smart == True and previous_smart != True):
             smart_backup.close()
         completed = []
-        print("\nBackup completed!\n")
+        print("\Replication completed!\n")
 
 
 # Loop until the user's input is valid
@@ -301,7 +301,7 @@ def GrabId(link, id):
 
 # Loop until it's known whether the user wants to backup a specific folder or the entire specified Drive
 def FolderOrDriveLoop(var):
-    print('Do you wish to backup all the files in the Drive or just one specific folder?')
+    print('Do you wish to replicate all the files in the Drive or just one specific folder?')
     var = input('Enter \'A\' for all files or \'F\' for a specific folder: ')
     var = var.lower()
     var = ClosedQuestionLoop(var, 'a', 'f')
