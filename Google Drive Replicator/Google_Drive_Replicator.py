@@ -61,6 +61,7 @@ def main():
                 query = f"parents = '{folder_id}'"
                 request = service.files().list(q=query,
                                                orderBy='folder, name',
+                                               includeItemsFromAllDrives=True,
                                                supportsAllDrives=True
                                                ).execute()
             else:
@@ -79,7 +80,9 @@ def main():
         while nextPageToken:
             request = service.files().list(q=query,
                                            orderBy='folder, name',
-                                           pageToken=nextPageToken
+                                           pageToken=nextPageToken,
+                                           includeItemsFromAllDrives=True,
+                                           supportsAllDrives=True
                                            ).execute()
             files.extend(request.get('files'))
             nextPageToken = request.get('nextPageToken')
@@ -385,7 +388,7 @@ def Banner():
 |__|__||___||  _||_||_||___||__,||_|  |___||_|           
             |_|                                          
 
-Google Drive Replicator V1.0
+Google Drive Replicator v1.0
 Coded by TechSnowOwl
 https://github.com/techsnowowl/Google-Drive-Replicator
     '''
