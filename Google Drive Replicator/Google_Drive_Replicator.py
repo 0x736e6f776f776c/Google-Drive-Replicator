@@ -78,8 +78,7 @@ def main():
         files = request.get('files')
         nextPageToken = request.get('nextPageToken')
         while nextPageToken:
-            request = service.files().list(q=query,
-                                           orderBy='folder, name',
+            request = service.files().list(orderBy='folder, name',
                                            pageToken=nextPageToken,
                                            includeItemsFromAllDrives=True,
                                            supportsAllDrives=True
@@ -273,7 +272,7 @@ def main():
         if(smart == True and previous_smart != True):
             smart_backup.close()
         completed = []
-        print("\Replication completed!\n")
+        print("Replication completed!\n")
 
 
 # Loop until the user's input is valid
