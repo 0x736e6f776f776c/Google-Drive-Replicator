@@ -50,11 +50,14 @@ def main():
             if(personal_drive_datatype == 'f'):
                 folder_link = input('Please enter the link to the folder in your Personal/My Drive that you\'d like to replicate: ')
                 folder_id = GrabId(folder_link, folder_id)
-                query = f"parents = '{folder_id}'"
-                request = service.files().list(q=query).execute()
+                query = f"'{folder_id}' in parents"
+                request = service.files().list(q=query,
+                                               orderBy= 'folder, name',
+                                               fields = 'nextPageToken, files(id,parents)'
+                                               ).execute()
             else:
                 request = service.files().list(orderBy='folder, name',
-                                               fields = '*'
+                                               fields = 'nextPageToken, files(id,parents)'
                                                ).execute()
 
         # Fetching data for Shared Drive
@@ -63,11 +66,12 @@ def main():
             if(shared_drive_datatype == 'f'):
                 folder_link = input('Please enter the link of the folder in the selected Shared Drive that you\'d like to replicate: ')
                 folder_id = GrabId(folder_link, folder_id)
-                query = f"parents = '{folder_id}'"
+                query = f"'{folder_id}' in parents"
                 request = service.files().list(q=query,
                                                orderBy='folder, name',
                                                includeItemsFromAllDrives=True,
-                                               supportsAllDrives=True
+                                               supportsAllDrives=True,
+                                               fields = 'nextPageToken, files(id,parents)'
                                                ).execute()
             else:
                 drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to replicate: '))
@@ -76,16 +80,14 @@ def main():
                                                driveId=drive_id,
                                                orderBy='folder, name',
                                                includeItemsFromAllDrives=True,
-                                               supportsAllDrives=True
+                                               supportsAllDrives=True,
+                                               fields = 'nextPageToken, files(id,parents)'
                                                ).execute()
 
         # Get a DataFrame of all files and their metadata
-        files = request.get('files',
-                            'id, parents'
-                            )
-        print(files)
+        files = request.get('files')
         nextPageToken = request.get('nextPageToken')
-        print(nextPageToken)
+        print(nextPageToken) #Debug
         if(shared_drive_datatype == 'f' or personal_drive_datatype == 'f'):
             while nextPageToken:
                 request = service.files().list(q=query,
@@ -94,13 +96,13 @@ def main():
                                                corpora='folder',
                                                includeItemsFromAllDrives=True,
                                                supportsAllDrives=True,
-                                               driveId=drive_id
+                                               driveId=drive_id,
+                                               fields = 'nextPageToken, files(id,parents)'
                                                ).execute()
-                files.extend(request.get('files',
-                                         'id, parents'
-                                         ))
+                files.extend(request.get('files'))
                 nextPageToken = request.get('nextPageToken')
         elif(source_drive_type == 's'):
+            print(nextPageToken) #Debug
             while nextPageToken:
                 request = service.files().list(q=query,
                                                orderBy='folder, name',
@@ -108,23 +110,21 @@ def main():
                                                corpora='drive',
                                                includeItemsFromAllDrives=True,
                                                supportsAllDrives=True,
-                                               driveId=drive_id
+                                               driveId=drive_id,
+                                               fields = 'nextPageToken, files(id,parents)'
                                                ).execute()
-                files.extend(request.get('files',
-                                         'id, parents'
-                                         ))
+                files.extend(request.get('files'))
                 nextPageToken = request.get('nextPageToken')
         else:
              while nextPageToken:
                 request = service.files().list(orderBy='folder, name', 
-                                               pageToken=nextPageToken
+                                               pageToken=nextPageToken,
+                                               fields = 'nextPageToken, files(id,parents)'
                                                ).execute()
-                files.extend(request.get('files',
-                                         'id, parents'
-                                         ))
+                files.extend(request.get('files'))
                 nextPageToken = request.get('nextPageToken')
         df = pn.DataFrame(files)
-        # print(df)
+        print(df)
 
         # Query amount of backup destinations to user
         try:
@@ -235,17 +235,19 @@ def main():
                     elif(smart == True):
                         smart_backup.write(source_folder_id + '\n')
                     completed.append(source_folder_id)
-                    temp_parents_list = {}
-                    df_children = df[~df["parents"].str.contains("", na=False)]
-                    df_children = pn.DataFrame(df_children.parents.str.contains(source_folder_id))
-                    print(df_children)
-                    for index, rows in df_children.iterrows():
+                    for index, rows in df.iterrows():
                         old_file = service.files().get(fileId=rows.id,
-                                                       fields='name, id, trashed',
-                                                       supportsAllDrives=True
-                                                       ).execute()
+                                                        fields='name, id, parents, trashed',
+                                                        supportsAllDrives=True
+                                                        ).execute()
+                        file_parents = old_file.get('parents')
                         trashed = old_file.get('trashed')
                         print(source_folder_id)
+                        print(file_parents)
+                        if(file_parents == None):
+                            continue
+                        if(source_folder_id not in file_parents):
+                            continue
                         if(trashed == True):
                             continue
                         new_file_name = old_file.get('name')
