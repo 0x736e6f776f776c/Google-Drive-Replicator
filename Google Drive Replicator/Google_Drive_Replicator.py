@@ -30,8 +30,6 @@ def main():
     df_children = None # Placeholder
     temp_parents_list = None # Placeholder
 
-        
-
     # Create the Drive API Service
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION,SCOPES)
 
@@ -47,62 +45,32 @@ def main():
         # Fetching data for Personal Drive
         if(source_drive_type == 'p'):
             personal_drive_datatype = FolderOrDriveLoop(personal_drive_datatype)
-            if(personal_drive_datatype == 'f'):
-                folder_link = input('Please enter the link to the folder in your Personal/My Drive that you\'d like to replicate: ')
-                folder_id = GrabId(folder_link, folder_id)
-                query = f"'{folder_id}' in parents"
-                request = service.files().list(q=query,
-                                               orderBy= 'folder, name',
-                                               fields = 'nextPageToken, files(id,parents)'
-                                               ).execute()
-            else:
-                request = service.files().list(orderBy='folder, name',
-                                               fields = 'nextPageToken, files(id,parents)'
-                                               ).execute()
+            request = service.files().list(orderBy='folder, name',
+                                           fields = 'nextPageToken, files(id,parents)'
+                                           ).execute()
 
         # Fetching data for Shared Drive
         else:
             shared_drive_datatype = FolderOrDriveLoop(shared_drive_datatype)
             if(shared_drive_datatype == 'f'):
-                folder_link = input('Please enter the link of the folder in the selected Shared Drive that you\'d like to replicate: ')
-                folder_id = GrabId(folder_link, folder_id)
-                query = f"'{folder_id}' in parents"
-                request = service.files().list(q=query,
-                                               orderBy='folder, name',
-                                               includeItemsFromAllDrives=True,
-                                               supportsAllDrives=True,
-                                               fields = 'nextPageToken, files(id,parents)'
-                                               ).execute()
+                drive_link = str(input('Please enter the link to the' + '\033[1m' + '*ROOT*' + '\033[0m' + 'of the Shared Drive you\'re trying to replicate a folder from: ')) # The ANSI escape sequences make the text bold
             else:
-                drive_link = str(input('Please enter the link to the *ROOT* of the Shared Drive you\'re trying to replicate: '))
-                drive_id = GrabId(drive_link, drive_id)
-                request = service.files().list(corpora='drive',
-                                               driveId=drive_id,
-                                               orderBy='folder, name',
-                                               includeItemsFromAllDrives=True,
-                                               supportsAllDrives=True,
-                                               fields = 'nextPageToken, files(id,parents)'
-                                               ).execute()
+                drive_link = str(input('Please enter the link to the' + '\033[1m' + '*ROOT*' + '\033[0m' + 'of the Shared Drive you\'re trying to replicate: ')) # Idem
+            drive_id = GrabId(drive_link, drive_id)
+            request = service.files().list(corpora='drive',
+                                           driveId=drive_id,
+                                           orderBy='folder, name',
+                                           includeItemsFromAllDrives=True,
+                                           supportsAllDrives=True,
+                                           fields = 'nextPageToken, files(id,parents)'
+                                           ).execute()
 
         # Get a DataFrame of all files and their metadata
         files = request.get('files')
         nextPageToken = request.get('nextPageToken')
-        print(nextPageToken) #Debug
-        if(shared_drive_datatype == 'f' or personal_drive_datatype == 'f'):
-            while nextPageToken:
-                request = service.files().list(q=query,
-                                               orderBy='folder, name',
-                                               pageToken=nextPageToken,
-                                               corpora='folder',
-                                               includeItemsFromAllDrives=True,
-                                               supportsAllDrives=True,
-                                               driveId=drive_id,
-                                               fields = 'nextPageToken, files(id,parents)'
-                                               ).execute()
-                files.extend(request.get('files'))
-                nextPageToken = request.get('nextPageToken')
-        elif(source_drive_type == 's'):
-            print(nextPageToken) #Debug
+        print(nextPageToken) # Debug
+        if(source_drive_type == 's'):
+            print(nextPageToken) # Debug
             while nextPageToken:
                 request = service.files().list(q=query,
                                                orderBy='folder, name',
